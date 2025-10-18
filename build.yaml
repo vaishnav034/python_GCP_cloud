@@ -1,0 +1,29 @@
+steps:
+  # Step 1: Build Docker image for the Python app
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build', '-t', 'us-central1-docker.pkg.dev/my-gcp-project/app-repo/python-app:$COMMIT_SHA', '.'
+      ]
+
+  # Step 2: Push image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push', 'us-central1-docker.pkg.dev/my-gcp-project/app-repo/python-app:$COMMIT_SHA'
+      ]
+
+  # Step 3: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      [
+        'run', 'deploy', 'python-app',
+        '--image', 'us-central1-docker.pkg.dev/my-gcp-project/app-repo/python-app:$COMMIT_SHA',
+        '--region', 'us-central1',
+        '--platform', 'managed',
+        '--allow-unauthenticated'
+      ]
+
+images:
+  - 'us-central1-docker.pkg.dev/my-gcp-project/app-repo/python-app:$COMMIT_SHA'
